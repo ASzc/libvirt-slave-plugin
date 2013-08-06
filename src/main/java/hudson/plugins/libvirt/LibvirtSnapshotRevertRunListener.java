@@ -16,7 +16,7 @@ import org.libvirt.Domain;
 import org.libvirt.DomainSnapshot;
 import org.libvirt.LibvirtException;
 
-//Supertype doesn't declare generic types, can't do anything to fix that and still be able to override.
+// Supertype doesn't declare generic types, can't do anything to fix that and still be able to override.
 @SuppressWarnings("rawtypes")
 @Extension
 public class LibvirtSnapshotRevertRunListener extends RunListener<Run> {
@@ -31,7 +31,7 @@ public class LibvirtSnapshotRevertRunListener extends RunListener<Run> {
 
             // If a snapshot has been configured for this feature, proceed.
             String beforeJobSnapshotName = slave.getBeforeJobSnapshotName();
-            if (beforeJobSnapshotName == null || beforeJobSnapshotName.length() <= 0) {
+            if (beforeJobSnapshotName != null && beforeJobSnapshotName.length() > 0) {
 
                 SlaveComputer slaveComputer = slave.getComputer();
                 ComputerLauncher launcher = slave.getComputer().getLauncher();
