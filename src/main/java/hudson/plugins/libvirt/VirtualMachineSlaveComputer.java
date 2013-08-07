@@ -20,17 +20,10 @@
 
 package hudson.plugins.libvirt;
 
-import java.util.Map;
-
-import hudson.slaves.ComputerLauncher;
-import hudson.slaves.SlaveComputer;
-import hudson.model.Node;
 import hudson.model.Slave;
+import hudson.slaves.SlaveComputer;
+
 import org.libvirt.Connect;
-import org.libvirt.Domain;
-import org.libvirt.DomainSnapshot;
-import org.libvirt.LibvirtException;
-import org.libvirt.DomainInfo.DomainState;
 
 public class VirtualMachineSlaveComputer extends SlaveComputer {
 
@@ -41,63 +34,5 @@ public class VirtualMachineSlaveComputer extends SlaveComputer {
 
     public VirtualMachineSlaveComputer(Slave slave) {
         super(slave);
-    }
-
-    @Override
-    protected ComputerLauncher grabLauncher(Node node) {
-        // Revert to beforeJobSnapshot before the job gets the launcher
-        if (node instanceof VirtualMachineSlave) {
-            VirtualMachineSlave slave = (VirtualMachineSlave) node;
-
-            String beforeJobSnapshotName = slave.getBeforeJobSnapshotName();
-            if (beforeJobSnapshotName != null && beforeJobSnapshotName.length() > 0) {
-
-                ComputerLauncher launcher = slave.getLauncher();
-                if (launcher instanceof ComputerLauncher) {
-
-                    VirtualMachineLauncher slaveLauncher = (VirtualMachineLauncher) launcher;
-                    Hypervisor hypervisor = slaveLauncher.findOurHypervisorInstance();
-
-                    try {
-                        Map<String, Domain> domains = hypervisor.getDomains();
-
-                        String vmName = slaveLauncher.getVirtualMachineName();
-                        Domain domain = domains.get(vmName);
-                        if (domain != null) {
-                            //listener.getLogger().println("Reverting " + vmName + " to snapshot " + beforeJobSnapshotName + ".");
-
-                            try {
-                                DomainSnapshot snapshot = domain.snapshotLookupByName(beforeJobSnapshotName);
-                                try {
-                                    domain.revertToSnapshot(snapshot);
-
-                                    DomainState state = domain.getInfo().state;
-                                    if (!DomainState.VIR_DOMAIN_BLOCKED.equals(state) && !DomainState.VIR_DOMAIN_RUNNING.equals(state)) {
-                                        //listener.getLogger().println("Starting VM.");
-                                        try {
-                                            domain.create();
-                                        } catch (LibvirtException e) {
-                                            //listener.fatalError("Could not start VM: " + e);
-                                        }
-                                    }
-
-                                    slave.getComputer().connect(true);
-                                } catch (LibvirtException e) {
-                                    //listener.fatalError("No snapshot named " + beforeJobSnapshotName + " for VM: " + e);
-                                }
-                            } catch (LibvirtException e) {
-                                //listener.fatalError("No snapshot named " + beforeJobSnapshotName + " for VM: " + e);
-                            }
-                        } else {
-                            //listener.fatalError("No VM named " + vmName);
-                        }
-                    } catch (LibvirtException e) {
-                        //listener.fatalError("Can't get VM domains: " + e);
-                    }
-                }
-            }
-        }
-
-        return super.grabLauncher(node);
     }
 }
