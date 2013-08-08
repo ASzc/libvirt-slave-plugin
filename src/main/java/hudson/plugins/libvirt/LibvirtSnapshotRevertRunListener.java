@@ -2,6 +2,7 @@ package hudson.plugins.libvirt;
 
 import hudson.Extension;
 import hudson.model.TaskListener;
+import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.listeners.RunListener;
@@ -11,7 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.libvirt.Domain;
-import org.libvirt.DomainInfo.DomainState;
 import org.libvirt.DomainSnapshot;
 import org.libvirt.LibvirtException;
 
@@ -42,20 +42,39 @@ public class LibvirtSnapshotRevertRunListener extends RunListener<Run> {
                         String vmName = slaveLauncher.getVirtualMachineName();
                         Domain domain = domains.get(vmName);
                         if (domain != null) {
-                            listener.getLogger().println("Reverting " + vmName + " to snapshot " + beforeJobSnapshotName + ".");
+                            listener.getLogger().println("Preparing to revert " + vmName + " to snapshot " + beforeJobSnapshotName + ".");
 
                             try {
                                 DomainSnapshot snapshot = domain.snapshotLookupByName(beforeJobSnapshotName);
                                 try {
-                                    domain.revertToSnapshot(snapshot);
-
-                                    listener.getLogger().println("Relaunching " + vmName + ".");
+                                    Computer computer = slave.getComputer();
                                     try {
-                                        launcher.launch(slave.getComputer(), listener);
-                                    } catch (IOException e) {
-                                        listener.fatalError("Could not relaunch VM: " + e);
+                                        computer.getChannel().syncLocalIO();
+                                        try {
+                                            computer.getChannel().close();
+                                            computer.disconnect(null);
+                                            try {
+                                                computer.waitUntilOffline();
+
+                                                listener.getLogger().println("Reverting " + vmName + " to snapshot " + beforeJobSnapshotName + ".");
+                                                domain.revertToSnapshot(snapshot);
+
+                                                listener.getLogger().println("Relaunching " + vmName + ".");
+                                                try {
+                                                    launcher.launch(slave.getComputer(), listener);
+                                                } catch (IOException e) {
+                                                    listener.fatalError("Could not relaunch VM: " + e);
+                                                } catch (InterruptedException e) {
+                                                    listener.fatalError("Could not relaunch VM: " + e);
+                                                }
+                                            } catch (InterruptedException e) {
+                                                listener.fatalError("Interrupted while waiting for computer to be offline: " + e);
+                                            }
+                                        } catch (IOException e) {
+                                            listener.fatalError("Error closing channel: " + e);
+                                        }
                                     } catch (InterruptedException e) {
-                                        listener.fatalError("Could not relaunch VM: " + e);
+                                        listener.fatalError("Interrupted while syncing IO: " + e);
                                     }
                                 } catch (LibvirtException e) {
                                     listener.fatalError("No snapshot named " + beforeJobSnapshotName + " for VM: " + e);
