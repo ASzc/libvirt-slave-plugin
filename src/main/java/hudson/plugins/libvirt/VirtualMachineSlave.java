@@ -50,7 +50,7 @@ public class VirtualMachineSlave extends Slave {
     private String 				snapshotName;
     private String 				virtualMachineName;
     private int 				startupWaitingPeriodSeconds;
-    private String beforeJobSnapshotName;
+    private String              beforeJobSnapshotName;
 
     @DataBoundConstructor
     public VirtualMachineSlave(String name, String nodeDescription, String remoteFS, String numExecutors,
