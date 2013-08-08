@@ -20,9 +20,8 @@
 
 package hudson.plugins.libvirt;
 
-import hudson.model.Slave;
 import hudson.slaves.SlaveComputer;
-
+import hudson.model.Slave;
 import org.libvirt.Connect;
 
 public class VirtualMachineSlaveComputer extends SlaveComputer {
