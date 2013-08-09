@@ -27,8 +27,8 @@ public class LibvirtSnapshotRevertRunListener extends RunListener<Run<?, ?>> {
 
             String snapshotName = null;
 
-            String jobBeforeJobSnapshotName = null;
             BeforeJobSnapshotJobProperty prop = r.getParent().getProperty(BeforeJobSnapshotJobProperty.class);
+            String jobBeforeJobSnapshotName = null;
             if (prop != null)
                 jobBeforeJobSnapshotName = prop.getSnapshotName();
 
