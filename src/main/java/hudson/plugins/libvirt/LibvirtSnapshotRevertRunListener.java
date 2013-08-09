@@ -15,13 +15,11 @@ import org.libvirt.Domain;
 import org.libvirt.DomainSnapshot;
 import org.libvirt.LibvirtException;
 
-// Supertype doesn't declare generic types, can't do anything to fix that and still be able to override.
-@SuppressWarnings("rawtypes")
 @Extension
-public class LibvirtSnapshotRevertRunListener extends RunListener<Run> {
+public class LibvirtSnapshotRevertRunListener extends RunListener<Run<?, ?>> {
 
     @Override
-    public void onStarted(Run r, TaskListener listener) {
+    public void onStarted(Run<?, ?> r, TaskListener listener) {
         Node node = r.getExecutor().getOwner().getNode();
 
         if (node instanceof VirtualMachineSlave) {
@@ -29,7 +27,11 @@ public class LibvirtSnapshotRevertRunListener extends RunListener<Run> {
 
             String snapshotName = null;
 
-            String jobBeforeJobSnapshotName = ""; // TODO
+            String jobBeforeJobSnapshotName = null;
+            BeforeJobSnapshotJobProperty prop = r.getParent().getProperty(BeforeJobSnapshotJobProperty.class);
+            if (prop != null)
+                jobBeforeJobSnapshotName = prop.getSnapshotName();
+
             String slaveBeforeJobSnapshotName = slave.getBeforeJobSnapshotName();
 
             if (jobBeforeJobSnapshotName != null && jobBeforeJobSnapshotName.length() > 0)
