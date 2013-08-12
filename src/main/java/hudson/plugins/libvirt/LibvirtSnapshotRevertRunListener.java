@@ -34,10 +34,20 @@ public class LibvirtSnapshotRevertRunListener extends RunListener<Run<?, ?>> {
 
             String slaveBeforeJobSnapshotName = slave.getBeforeJobSnapshotName();
 
-            if (jobBeforeJobSnapshotName != null && jobBeforeJobSnapshotName.length() > 0)
+            if (jobBeforeJobSnapshotName != null && jobBeforeJobSnapshotName.length() > 0) {
+                listener.getLogger().println("Got snapshot " + jobBeforeJobSnapshotName + " from job configuration");
                 snapshotName = jobBeforeJobSnapshotName;
-            else if (slaveBeforeJobSnapshotName != null && slaveBeforeJobSnapshotName.length() > 0)
-                snapshotName = slaveBeforeJobSnapshotName;
+            }
+
+            if (slaveBeforeJobSnapshotName != null && slaveBeforeJobSnapshotName.length() > 0) {
+                if (snapshotName == null) {
+                    listener.getLogger().println("Got snapshot " + slaveBeforeJobSnapshotName + " from slave/node configuration");
+                    snapshotName = slaveBeforeJobSnapshotName;
+                } else {
+                    listener.getLogger().println("Favouring snapshot from previously identified source over " +
+                                                 slaveBeforeJobSnapshotName + " from slave/node configuration");
+                }
+            }
 
             if (snapshotName != null)
                 revertVMSnapshot(slave, snapshotName, listener);

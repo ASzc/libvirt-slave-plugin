@@ -18,19 +18,50 @@ public class BeforeJobSnapshotJobProperty extends JobProperty<Job<?, ?>> {
         }
     }
 
-    private String snapshotName;
+    // Required for stapler to work, since "snapshotsEnabled" in the jelly markup encapsulates the data
+    public static class EnableData {
+        private String snapshotName;
+        private boolean snapshotsEnabled;
+
+        @DataBoundConstructor
+        public EnableData(boolean snapshotsEnabled, String snapshotName) {
+            setSnapshotsEnabled(snapshotsEnabled);
+            setSnapshotName(snapshotName);
+        }
+
+        public String getSnapshotName() {
+            return snapshotName;
+        }
+
+        public boolean getSnapshotsEnabled() {
+            return snapshotsEnabled;
+        }
+
+        private void setSnapshotName(String snapshotName) {
+            this.snapshotName = snapshotName;
+        }
+
+        private void setSnapshotsEnabled(boolean snapshotsEnabled) {
+            this.snapshotsEnabled = snapshotsEnabled;
+        }
+    }
+
+    private EnableData snapshotsEnabled;
 
     @DataBoundConstructor
-    public BeforeJobSnapshotJobProperty(String snapshotName) {
-        setSnapshotName(snapshotName);
+    public BeforeJobSnapshotJobProperty(EnableData snapshots) {
+        this.snapshotsEnabled = snapshots;
     }
 
     public String getSnapshotName() {
-        return snapshotName;
+        return getSnapshotsEnabled() ? snapshotsEnabled.getSnapshotName() : null;
     }
 
-    private void setSnapshotName(String snapshotName) {
+    public EnableData getSnapshots() {
+        return snapshotsEnabled;
+    }
 
-        this.snapshotName = snapshotName;
+    public boolean getSnapshotsEnabled() {
+        return snapshotsEnabled != null;
     }
 }
